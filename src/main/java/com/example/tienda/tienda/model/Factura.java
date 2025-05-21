@@ -1,10 +1,21 @@
 package com.example.tienda.tienda.model;
 
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "facturas")
 public class Factura {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @ManyToOne
+    @JoinColumn(name = "compra_id", nullable = false)
     private Compra compra;
+    @Column(name = "fecha_emision", nullable = false)
     private String fechaEmision;
+    @Column(name = "numero_factura", nullable = false)
     private String numeroFactura;
+    @Column(name = "detalles", nullable = false)
     private String detalles;
 
     public Factura() {

@@ -18,12 +18,13 @@ import com.example.tienda.tienda.service.MarcaService;
 @RestController
 @RequestMapping("/marcas")
 public class MarcaControlller {
+    
     @Autowired
     private MarcaService servicio;
 
     @GetMapping
     public List<Marca> listarMarcas() {
-        return servicio.listarTodas();
+        return servicio.listarTodos();
     }
 
     @GetMapping("/{id}")

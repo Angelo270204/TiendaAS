@@ -1,39 +1,34 @@
 package com.example.tienda.tienda.service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
+import com.example.tienda.tienda.Repository.CategoriaRepository;
 import com.example.tienda.tienda.model.Categoria;
 
 @Service
 public class CategoriaService {
-     private List<Categoria> categorias = new ArrayList<>();
-    private long nextId = 1;
-
-    public CategoriaService() {
-        // Agregando categorías de ejemplo
-        categorias.add(new Categoria(nextId++, "Refrigeradoras"));
-        categorias.add(new Categoria(nextId++, "Lavadoras"));
-        categorias.add(new Categoria(nextId++, "Cocinas"));
-        categorias.add(new Categoria(nextId++, "Televisores"));
+    
+    private final CategoriaRepository categoriaRepository;
+    
+    public CategoriaService(CategoriaRepository categoriaRepository) {
+        this.categoriaRepository = categoriaRepository;
     }
-
-    public List<Categoria> listarTodas() {
-        return categorias;
+    
+    public List<Categoria> listarTodos() {
+        return categoriaRepository.findAll();
     }
-
+    
     public Optional<Categoria> obtenerPorId(Long id) {
-        return categorias.stream().filter(c -> c.getId().equals(id)).findFirst();
+        return categoriaRepository.findById(id);
     }
-
-    public void agregarCategoria(Categoria categoria) {
-        categoria.setId(nextId++);
-        categorias.add(categoria);
+    
+    public Categoria agregarCategoria(Categoria categoria) {
+        return categoriaRepository.save(categoria);
     }
-
+    
     public boolean actualizarCategoria(Long id, Categoria categoriaActualizada) {
         Optional<Categoria> categoriaExistente = obtenerPorId(id);
         if (categoriaExistente.isPresent()) {
@@ -43,8 +38,8 @@ public class CategoriaService {
         }
         return false;
     }
-
+    
     public boolean eliminarCategoria(Long id) {
-        return categorias.removeIf(c -> c.getId().equals(id));
+        return categoriaRepository.existsById(id);
     }
 }

@@ -1,8 +1,11 @@
 package com.example.tienda.tienda.controller;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,23 +25,24 @@ public class OfertaController {
 
     @GetMapping
     public List<Oferta> listarOfertas() {
-        return servicio.listarTodas();
+        return servicio.listarTodos();
     }
 
     @GetMapping("/{id}")
-    public Oferta obtenerOferta(@PathVariable Long id) {
-        return servicio.obtenerPorId(id).orElse(null);
+    public ResponseEntity<Oferta> obtenerOferta(@PathVariable Long id) {
+        Optional<Oferta> oferta = servicio.obtenerPorId(id);
+        return oferta.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    public String agregarOferta(@RequestBody Oferta oferta) {
-        servicio.agregarOferta(oferta);
-        return "Oferta agregada correctamente.";
+    public ResponseEntity<Oferta> agregarOferta(@RequestBody Oferta oferta) {
+        Oferta nuevaOferta = servicio.agregarOferta(oferta);
+        return ResponseEntity.status(HttpStatus.CREATED).body(nuevaOferta);
     }
 
     @DeleteMapping("/{id}")
-    public String eliminarOferta(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminarOferta(@PathVariable Long id) {
         boolean eliminado = servicio.eliminarOferta(id);
-        return eliminado ? "Oferta eliminada." : "Oferta no encontrada.";
+        return eliminado ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
 }

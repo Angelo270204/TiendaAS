@@ -1,10 +1,21 @@
 package com.example.tienda.tienda.model;
 
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "ofertas")
 public class Oferta {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(name = "titulo", nullable = false)
     private String titulo;
+    @Column(name = "descripcion", nullable = false)
     private String descripcion;
+    @Column(name = "descuento", nullable = false)
     private Double descuento; 
+    @ManyToOne
+    @JoinColumn(name = "producto_id", nullable = false)
     private Producto producto;
 
     public Oferta(){

@@ -1,31 +1,40 @@
 package com.example.tienda.tienda.service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
 import org.springframework.stereotype.Service;
 
+import com.example.tienda.tienda.Repository.UsuarioRepository;
 import com.example.tienda.tienda.model.Usuario;
 
 @Service
 public class UsuarioService {
-    private List<Usuario> usuarios = new ArrayList<>();
-    private Long nextId = 1L;
-
+    private final UsuarioRepository usuarioRepository;
+    
+    public UsuarioService(UsuarioRepository usuarioRepository) {
+        this.usuarioRepository = usuarioRepository;
+    }
+    
     public List<Usuario> listarTodos() {
-        return usuarios;
+        return usuarioRepository.findAll();
     }
-
+    
     public Optional<Usuario> obtenerPorId(Long id) {
-        return usuarios.stream().filter(u -> u.getId().equals(id)).findFirst();
+        return usuarioRepository.findById(id);
     }
-
-    public void agregarUsuario(Usuario usuario) {
-        usuario.setId(nextId++);
-        usuarios.add(usuario);
+    
+    public Usuario agregarUsuario(Usuario usuario) {
+        return usuarioRepository.save(usuario);
     }
-
+    
     public boolean eliminarUsuario(Long id) {
-        return usuarios.removeIf(u -> u.getId().equals(id));
+        if (usuarioRepository.existsById(id)) {
+            usuarioRepository.deleteById(id);
+            return true;
+        }
+        return false;
     }
+
+    
 }

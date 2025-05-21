@@ -2,11 +2,22 @@ package com.example.tienda.tienda.model;
 
 import java.util.List;
 
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "compras")
 public class Compra {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @ManyToOne
+    @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;
+    @OneToMany(mappedBy = "compra", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Producto> productos;
+    @Column(name = "total", nullable = false)
     private Double total;
+    @Column(name = "fecha", nullable = false)
     private String fecha;
 
     public Compra(){

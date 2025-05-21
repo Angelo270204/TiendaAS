@@ -23,7 +23,7 @@ public class CategoriaController {
 
     @GetMapping
     public List<Categoria> listarCategorias() {
-        return servicio.listarTodas();
+        return servicio.listarTodos();
     }
 
     @GetMapping("/{id}")

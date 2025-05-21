@@ -1,12 +1,29 @@
 package com.example.tienda.tienda.model;
 
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "productos")
 public class Producto {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(name = "nombre", nullable = false)
     private String nombre;
+    @Column(name = "precio", nullable = false)
     private double precio;
+    @Column(name = "stock", nullable = false)
     private int stock;
+    @ManyToOne
+    @JoinColumn(name = "marca_id", nullable = false)
     private Marca marca;
+    @ManyToOne
+    @JoinColumn(name = "categoria_id", nullable = false)
     private Categoria categoria;
+    
+    @ManyToOne
+    @JoinColumn(name = "compra_id")
+    private Compra compra;
 
     public Producto() {}
 
@@ -66,5 +83,13 @@ public class Producto {
     public void setCategoria(Categoria categoria){
         this.categoria = categoria;
     }
-}
+    
+    public Compra getCompra() {
+        return compra;
+    }
 
+
+    public void setCompra(Compra compra) {
+        this.compra = compra;
+    }
+}

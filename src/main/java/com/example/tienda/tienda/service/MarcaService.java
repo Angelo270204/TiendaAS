@@ -1,38 +1,33 @@
 package com.example.tienda.tienda.service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
+import com.example.tienda.tienda.Repository.MarcaRepository;
 import com.example.tienda.tienda.model.Marca;
 
 @Service
 public class MarcaService {
-    private List<Marca> marcas = new ArrayList<>();
-    private long nextId = 1;
-
-    public MarcaService() {
-        // Agregando marcas de ejemplo
-        marcas.add(new Marca(nextId++, "LG"));
-        marcas.add(new Marca(nextId++, "Samsung"));
-        marcas.add(new Marca(nextId++, "Panasonic"));
+    private final MarcaRepository marcaRepository;
+    
+    public MarcaService(MarcaRepository marcaRepository) {
+        this.marcaRepository = marcaRepository;
     }
-
-    public List<Marca> listarTodas() {
-        return marcas;
+    
+    public List<Marca> listarTodos() {
+        return marcaRepository.findAll();
     }
-
+    
     public Optional<Marca> obtenerPorId(Long id) {
-        return marcas.stream().filter(m -> m.getId().equals(id)).findFirst();
+        return marcaRepository.findById(id);
     }
-
-    public void agregarMarca(Marca marca) {
-        marca.setId(nextId++);
-        marcas.add(marca);
+    
+    public Marca agregarMarca(Marca marca) {
+        return marcaRepository.save(marca);
     }
-
+    
     public boolean actualizarMarca(Long id, Marca marcaActualizada) {
         Optional<Marca> marcaExistente = obtenerPorId(id);
         if (marcaExistente.isPresent()) {
@@ -42,8 +37,8 @@ public class MarcaService {
         }
         return false;
     }
-
+    
     public boolean eliminarMarca(Long id) {
-        return marcas.removeIf(m -> m.getId().equals(id));
+        return marcaRepository.existsById(id);
     }
 }
