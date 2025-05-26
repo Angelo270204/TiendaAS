@@ -5,13 +5,8 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 
 import com.example.tienda.tienda.dto.UsuarioDto;
 import com.example.tienda.tienda.model.Usuario;
@@ -24,6 +19,7 @@ public class UsuarioController {
     private UsuarioService servicio;
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public List<UsuarioDto> listarUsuarios() {
         return servicio.listarTodos().stream()
                 .map(UsuarioDto::new)
@@ -31,6 +27,7 @@ public class UsuarioController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UsuarioDto> obtenerUsuario(@PathVariable Long id) {
         return servicio.obtenerPorId(id)
                 .map(UsuarioDto::new)
@@ -39,14 +36,19 @@ public class UsuarioController {
     }
 
     @PostMapping
-    public String agregarUsuario(@RequestBody Usuario usuario) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<String> agregarUsuario(@RequestBody Usuario usuario) {
         servicio.agregarUsuario(usuario);
-        return "Usuario agregado correctamente.";
+        return ResponseEntity.ok("Usuario agregado correctamente.");
     }
 
     @DeleteMapping("/{id}")
-    public String eliminarUsuario(@PathVariable Long id) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<String> eliminarUsuario(@PathVariable Long id) {
         boolean eliminado = servicio.eliminarUsuario(id);
-        return eliminado ? "Usuario eliminado." : "Usuario no encontrado.";
+        if (eliminado) {
+            return ResponseEntity.ok("Usuario eliminado correctamente.");
+        }
+        return ResponseEntity.notFound().build();
     }
 }

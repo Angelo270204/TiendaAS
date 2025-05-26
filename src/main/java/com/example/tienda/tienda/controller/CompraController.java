@@ -1,59 +1,93 @@
 package com.example.tienda.tienda.controller;
 
-import java.util.List;
-import java.util.Optional;
-
-import org.springframework.beans.factory.annotation.Autowired;
+import com.example.tienda.tienda.dto.CompraRequest;
+import com.example.tienda.tienda.model.Compra;
+import com.example.tienda.tienda.model.DetalleCompra;
+import com.example.tienda.tienda.model.EstadoCompra;
+import com.example.tienda.tienda.model.Producto;
+import com.example.tienda.tienda.model.Usuario;
+import com.example.tienda.tienda.service.CompraService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 
-import com.example.tienda.tienda.model.Compra;
-import com.example.tienda.tienda.service.CompraService;
+import java.util.List;
 
 @RestController
-@RequestMapping("/compras")
+@RequestMapping("/api/compras")
+@PreAuthorize("isAuthenticated()")
 public class CompraController {
-    @Autowired
-    private CompraService servicio;
+
+    private final CompraService compraService;
+
+    public CompraController(CompraService compraService) {
+        this.compraService = compraService;
+    }
 
     @GetMapping
-    public List<Compra> listarCompras() {
-        return servicio.listarTodos();
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<Compra>> listarTodasLasCompras() {
+        return ResponseEntity.ok(compraService.listarTodas());
+    }
+
+    @GetMapping("/usuario/{usuarioId}")
+    public ResponseEntity<List<Compra>> listarComprasPorUsuario(@PathVariable Long usuarioId) {
+        return ResponseEntity.ok(compraService.obtenerPorUsuarioId(usuarioId));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Compra> obtenerCompra(@PathVariable Long id) {
-        Optional<Compra> compra = servicio.obtenerPorId(id);
-        return compra.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+        return compraService.obtenerPorId(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    public ResponseEntity<Compra> agregarCompra(@RequestBody Compra compra) {
-        Compra nuevaCompra = servicio.agregarCompra(compra);
-        return ResponseEntity.status(HttpStatus.CREATED).body(nuevaCompra);
+    @ResponseStatus(HttpStatus.CREATED)
+    public ResponseEntity<Compra> crearCompra(@RequestBody CompraRequest compraRequest) {
+        // Convertir DTO a entidad
+        Usuario usuario = new Usuario();
+        usuario.setId(compraRequest.getUsuarioId());
+
+        Compra compra = new Compra();
+        compra.setUsuario(usuario);
+
+        // Convertir detalles del DTO a entidades
+        for (CompraRequest.DetalleCompraRequest detalleRequest : compraRequest.getDetalles()) {
+            Producto producto = new Producto();
+            producto.setId(detalleRequest.getProductoId());
+
+            DetalleCompra detalle = new DetalleCompra();
+            detalle.setProducto(producto);
+            detalle.setCantidad(detalleRequest.getCantidad());
+
+            compra.agregarDetalle(detalle);
+        }
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(compraService.crearCompra(compra));
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Compra> actualizarCompra(@PathVariable Long id, @RequestBody Compra compra) {
-        boolean actualizado = servicio.actualizarCompra(id, compra);
-        if (actualizado) {
-            Optional<Compra> compraActualizada = servicio.obtenerPorId(id);
-            return compraActualizada.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    @PutMapping("/{id}/estado")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Compra> actualizarEstadoCompra(
+            @PathVariable Long id,
+            @RequestParam EstadoCompra estado) {
+
+        try {
+            return ResponseEntity.ok(compraService.actualizarEstadoCompra(id, estado));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().build();
         }
-        return ResponseEntity.notFound().build();
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> eliminarCompra(@PathVariable Long id) {
-        boolean eliminado = servicio.eliminarCompra(id);
-        return eliminado ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+        if (compraService.eliminarCompra(id)) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.notFound().build();
     }
 }

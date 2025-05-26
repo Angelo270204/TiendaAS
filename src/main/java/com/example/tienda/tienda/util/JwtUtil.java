@@ -24,6 +24,11 @@ public class JwtUtil {
     }
 
     public String generarToken(String username, String rol) {
+        // Asegurarse de que el rol no tenga el prefijo ROLE_ duplicado
+        if (rol != null && rol.startsWith("ROLE_")) {
+            rol = rol.substring(5); // Eliminar ROLE_ si ya está presente
+        }
+        
         Map<String, Object> claims = new HashMap<>();
         claims.put("rol", rol);
         return Jwts.builder()
@@ -48,7 +53,12 @@ public class JwtUtil {
     }
 
     public String extraerRol(String token) {
-        return (String) extraerTodosLosClaims(token).get("rol");
+        String rol = (String) extraerTodosLosClaims(token).get("rol");
+        // Asegurarse de que el rol tenga el prefijo ROLE_
+        if (rol != null && !rol.startsWith("ROLE_")) {
+            rol = "ROLE_" + rol;
+        }
+        return rol;
     }
 
     public boolean estaTokenExpirado(String token) {

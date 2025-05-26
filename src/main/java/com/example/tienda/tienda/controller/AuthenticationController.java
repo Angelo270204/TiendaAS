@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @RestController
@@ -61,13 +62,16 @@ public class AuthenticationController {
             
             Map<String, Object> response = new HashMap<>();
             response.put("token", token);
-            response.put("user", new HashMap<String, Object>() {{
-                put("id", user.getId());
-                put("username", user.getUsername());
-                put("nombre", user.getNombre());
-                put("correo", user.getCorreo());
-                put("role", finalRole);
-            }});
+            
+            // Usar LinkedHashMap para mantener el orden de inserción
+            Map<String, Object> userData = new LinkedHashMap<>();
+            userData.put("id", user.getId());
+            userData.put("nombre", user.getNombre());
+            userData.put("correo", user.getCorreo());
+            userData.put("role", finalRole);
+            
+            response.put("user", userData);
+            
 
             return ResponseEntity.ok(response);
         } catch (BadCredentialsException e) {

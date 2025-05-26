@@ -1,8 +1,10 @@
 package com.example.tienda.tienda.model;
 
-import java.util.List;
-
 import jakarta.persistence.*;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 @Entity
 @Table(name = "compras")
@@ -10,28 +12,26 @@ public class Compra {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    
     @ManyToOne
     @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;
+    
     @OneToMany(mappedBy = "compra", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Producto> productos;
-    @Column(name = "total", nullable = false)
-    private Double total;
-    @Column(name = "fecha", nullable = false)
-    private String fecha;
-
-    public Compra(){
-
-    }
-
-    public Compra(Long id, Usuario usuario, List<Producto> productos, Double total, String fecha) {
-        this.id = id;
-        this.usuario = usuario;
-        this.productos = productos;
-        this.total = total;
-        this.fecha = fecha;
-    }
-
+    private List<DetalleCompra> detalles = new ArrayList<>();
+    
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal total;
+    
+    @Column(name = "fecha_compra", nullable = false)
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date fechaCompra;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private EstadoCompra estado;
+    
+    // Getters y Setters
     public Long getId() {
         return id;
     }
@@ -48,28 +48,51 @@ public class Compra {
         this.usuario = usuario;
     }
 
-    public List<Producto> getProductos() {
-        return productos;
+    public List<DetalleCompra> getDetalles() {
+        return detalles;
     }
 
-    public void setProductos(List<Producto> productos) {
-        this.productos = productos;
+    public void setDetalles(List<DetalleCompra> detalles) {
+        this.detalles = detalles;
     }
 
-    public Double getTotal() {
+    public BigDecimal getTotal() {
         return total;
     }
 
-    public void setTotal(Double total) {
+    public void setTotal(BigDecimal total) {
         this.total = total;
     }
 
-    public String getFecha() {
-        return fecha;
+    public Date getFechaCompra() {
+        return fechaCompra;
     }
 
-    public void setFecha(String fecha) {
-        this.fecha = fecha;
+    public void setFechaCompra(Date fechaCompra) {
+        this.fechaCompra = fechaCompra;
     }
 
+    public EstadoCompra getEstado() {
+        return estado;
+    }
+
+    public void setEstado(EstadoCompra estado) {
+        this.estado = estado;
+    }
+    
+    // Método para agregar un detalle a la compra
+    public void agregarDetalle(DetalleCompra detalle) {
+        detalles.add(detalle);
+        detalle.setCompra(this);
+    }
+    
+    // Método para calcular el total de la compra
+    public void calcularTotal() {
+        BigDecimal totalCalculado = BigDecimal.ZERO;
+        for (DetalleCompra detalle : detalles) {
+            detalle.calcularSubtotal();
+            totalCalculado = totalCalculado.add(detalle.getSubtotal());
+        }
+        this.total = totalCalculado;
+    }
 }

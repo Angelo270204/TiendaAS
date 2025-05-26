@@ -3,6 +3,8 @@ import com.example.tienda.tienda.model.Producto;
 import com.example.tienda.tienda.service.ProductoService;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,30 +17,43 @@ public class ProductoController {
     private ProductoService servicio;
 
     @GetMapping
+    @PreAuthorize("permitAll()")
     public List<Producto> listarProductos() {
         return servicio.listarTodos();
     }
 
     @GetMapping("/{id}")
-    public Producto obtenerProducto(@PathVariable Long id) {
-        return servicio.obtenerPorId(id).orElse(null);
+    @PreAuthorize("permitAll()")
+    public ResponseEntity<Producto> obtenerProducto(@PathVariable Long id) {
+        return servicio.obtenerPorId(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    public String agregarProducto(@RequestBody Producto producto) {
+    @PreAuthorize("permitAll()")
+    public ResponseEntity<String> agregarProducto(@RequestBody Producto producto) {
         servicio.agregarProducto(producto);
-        return "Producto agregado correctamente.";
+        return ResponseEntity.ok("Producto agregado correctamente.");
     }
 
     @PutMapping("/{id}")
-    public String actualizarProducto(@PathVariable Long id, @RequestBody Producto producto) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<String> actualizarProducto(@PathVariable Long id, @RequestBody Producto producto) {
         boolean actualizado = servicio.actualizarProducto(id, producto);
-        return actualizado ? "Producto actualizado." : "Producto no encontrado.";
+        if (actualizado) {
+            return ResponseEntity.ok("Producto actualizado.");
+        }
+        return ResponseEntity.notFound().build();
     }
 
     @DeleteMapping("/{id}")
-    public String eliminarProducto(@PathVariable Long id) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<String> eliminarProducto(@PathVariable Long id) {
         boolean eliminado = servicio.eliminarProducto(id);
-        return eliminado ? "Producto eliminado." : "Producto no encontrado.";
+        if (eliminado) {
+            return ResponseEntity.ok("Producto eliminado.");
+        }
+        return ResponseEntity.notFound().build();
     }
 }
