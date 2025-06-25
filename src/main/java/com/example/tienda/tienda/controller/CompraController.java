@@ -9,14 +9,12 @@ import com.example.tienda.tienda.model.Usuario;
 import com.example.tienda.tienda.service.CompraService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/compras")
-@PreAuthorize("isAuthenticated()")
 public class CompraController {
 
     private final CompraService compraService;
@@ -26,7 +24,6 @@ public class CompraController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<Compra>> listarTodasLasCompras() {
         return ResponseEntity.ok(compraService.listarTodas());
     }
@@ -70,7 +67,6 @@ public class CompraController {
     }
 
     @PutMapping("/{id}/estado")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Compra> actualizarEstadoCompra(
             @PathVariable Long id,
             @RequestParam EstadoCompra estado) {
@@ -83,7 +79,6 @@ public class CompraController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> eliminarCompra(@PathVariable Long id) {
         if (compraService.eliminarCompra(id)) {
             return ResponseEntity.noContent().build();

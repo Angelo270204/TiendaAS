@@ -32,49 +32,47 @@ public class AuthenticationController {
 
     @PostMapping("/authenticate")
     public ResponseEntity<?> authenticate(@RequestBody Map<String, String> credentials) {
-        String username = credentials.get("username");
-        String password = credentials.get("password");
+        String correo = credentials.get("correo");
+        String contrasena = credentials.get("contrasena");
 
-        if (username == null || password == null) {
-            return ResponseEntity.badRequest().body("Username and password are required");
+        if (correo == null || contrasena == null) {
+            return ResponseEntity.badRequest().body("Correo y contraseña son requeridos");
         }
+
+        System.out.println("Correo recibido: " + correo);
+        System.out.println("Contraseña recibida: " + contrasena);
 
         try {
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(username, password)
+                    new UsernamePasswordAuthenticationToken(correo, contrasena)
             );
 
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            
-            // Get the first role from the user's authorities
             String role = userDetails.getAuthorities().iterator().next().getAuthority();
-            // Remove "ROLE_" prefix if it exists
             if (role.startsWith("ROLE_")) {
                 role = role.substring(5);
             }
-            
             final String finalRole = role;
             String token = jwtUtil.generarToken(userDetails.getUsername(), finalRole);
 
-            // Find the user by email (which is used as username)
-            Usuario user = usuarioRepository.findByCorreo(username)
-                    .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + username));
-            
+            Usuario user = usuarioRepository.findByCorreo(correo)
+                    .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + correo));
+
             Map<String, Object> response = new HashMap<>();
             response.put("token", token);
-            
-            // Usar LinkedHashMap para mantener el orden de inserción
+
             Map<String, Object> userData = new LinkedHashMap<>();
             userData.put("id", user.getId());
             userData.put("nombre", user.getNombre());
             userData.put("correo", user.getCorreo());
+            userData.put("contraseña", user.getContraseña()); // Solo si es necesario, normalmente NO se envía
             userData.put("role", finalRole);
-            
-            response.put("user", userData);
-            
+
+            response.put("usuario", userData);
 
             return ResponseEntity.ok(response);
         } catch (BadCredentialsException e) {
+            System.out.println("Credenciales inválidas para: " + correo);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body("Credenciales inválidas");
         } catch (Exception e) {
@@ -82,4 +80,5 @@ public class AuthenticationController {
                     .body("Error de autenticación: " + e.getMessage());
         }
     }
+
 }

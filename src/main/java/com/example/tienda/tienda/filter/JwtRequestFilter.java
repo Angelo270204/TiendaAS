@@ -33,6 +33,15 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     }
 
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String path = request.getServletPath();
+        // Agrega aquí todos los endpoints públicos
+        return path.equals("/authenticate") || path.equals("/usuarios/register");
+    }
+
+
+
+    @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain)
@@ -60,19 +69,19 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
-            
+
             if (jwtUtil.validarToken(jwt, userDetails)) {
                 String rol = jwtUtil.extraerRol(jwt);
-                
+
                 // Asegurarse de que el rol tenga el prefijo ROLE_ si no lo tiene
                 if (rol != null && !rol.startsWith("ROLE_")) {
                     rol = "ROLE_" + rol;
                 }
-                
+
                 // Crear la autenticación con los roles correctos
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                     userDetails, null, userDetails.getAuthorities());
-                
+
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
